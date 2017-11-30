@@ -1,3 +1,5 @@
+%%% problem2.1
+
 % current working dir: ./code/fast_rcnn
 clear all
 SET_SHORTER=600;
@@ -70,7 +72,8 @@ hold on
 above_thres = length(K_scores(K_scores>chosen_thres));
 for i=1:above_thres
     box = K_boxes(i,:);
-    rectangle('Position', x1y1towh(box),'Curvature',[0,0],'LineWidth',2,'LineStyle','-','EdgeColor','r', 'tag', num2str(K_scores(i)))
+    rectangle('Position', x1y1towh(box),'Curvature',[0,0],'LineWidth',2,'LineStyle','-','EdgeColor','r')
+    text(box(1),box(2), num2str(K_scores(i)), 'Color','yellow');
     hold on
 end
 
