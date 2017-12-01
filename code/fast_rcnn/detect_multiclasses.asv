@@ -1,0 +1,70 @@
+clear all
+
+
+K = 100;  % maximum detections
+thres = 0.5;  % consider as a true positive when overlapped>0.5
+
+% load model
+net = load('../../data/models/fast-rcnn-caffenet-pascal07-dagnn.mat');
+net = preprocessNet(net);
+
+% read img, annotations from file
+img = imread('../../data/images/000096.jpg');
+proposals_all = load('../../data/SSW/SelectiveSearchVOC2007test.mat')
+ground_truth_xml = PASreadrecord('../../data/annotations/000096.xml');  % struct
+proposal = proposals_all.boxes(1);
+proposal = proposal{1,1};
+annotations = get_annotations(ground_truth_xml);  % ground truth annotations
+
+[scores_all, deltas_all] = detect(net, img, proposal);
+
+figure(1)
+imshow(img)
+
+for i_class = 1:21
+    annotated = annotations(annotations(:,1)==i_class, :);
+    if length(annotated) > 0  % not empty
+        score = scores_all(:,i_class);
+        delta = deltas_all(:,(i_class-1)*4+1:i_class*4);
+        [pred_boxes, pred_scores]= get_top_k(proposal, score, delta, K,thres);
+        tp_indices = get_true_positives(pred_boxes, annotated, thres);
+        
+        for i = tp_indices
+            box = 
+            rectangle('Position', x1y1towh(pred_boxes(i,:)),'Curvature',[0,0],'LineWidth',2,'LineStyle','-','EdgeColor','r')
+        end
+    end
+end
+
+
+for s = ground_truth_xml.objects  % iter over ground truth classes
+    class_name = s.class
+    i_class = get_class_index(class_name)
+    tb = s.bndbox
+    truth_box = [tb.xmin, tb.ymin, tb.xmax, tb.ymax]
+    score = scores_all(:,i_class);
+    delta = deltas_all(:,(i_class-1)*4+1:i_class*4);
+    [pred_boxes, pred_scores]= get_top_k(proposal, score, delta, K,thres);
+    
+    % tp_indices = get_true_positives(pred_boxes, truth_box, thres);  % index of pred_boxes
+    
+    if ~should_suppress(pred_box, truth_box, thres)
+        %plot 
+        rectangle('Position', truth_box,'Curvature',[0,0],'LineWidth',2,'LineStyle','-','EdgeColor','r')
+        hold on
+        label = [num2str(pred_scores(i)), class_name]
+        text(box(1),box(2), label, 'Color','yellow');
+    end
+    
+    % plot
+    for i = tp_indices
+        box = pred_boxes(i,:);
+        
+        hold on
+    end
+end
+
+for i_class = 1:1
+    
+end
+
